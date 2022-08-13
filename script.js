@@ -1,3 +1,6 @@
+
+/* AUTHOR: JEFFREY TUASON */
+
 /* SETUP DATA */
 const getData = async () => {
     const response = await fetch('data.json');
@@ -26,7 +29,7 @@ class Reply {
         this.replyingTo = replyingTo;
         this.score = score;
         this.user = user;
-    }
+    };
 };
 
 /* HOVERS */
@@ -54,7 +57,6 @@ const svgsRedButtons = buttons => {
 /* COMMENT BUTTONS */
 const saveReply = (commentID, obj) => {
     const comments = JSON.parse(localStorage.getItem('comments'));
-
     const newComments = comments.map(comment => {
 
         commentID === comment.id.toString() && comment.replies.push(obj);
@@ -62,29 +64,50 @@ const saveReply = (commentID, obj) => {
     });
     localStorage.setItem('comments', JSON.stringify(newComments));
 };
-const deleteReply = buttons => {
+/* delete buttons to show modal */
+const deleteCommentReply = (buttons) => {
     buttons.forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', e => {
+            const btn = e.currentTarget;
             const replyComment = btn.closest('.reply-comment');
-            const replyID = replyComment.dataset.id;
-    
-            replyComment.remove();
-    
-            const comments = JSON.parse(localStorage.getItem('comments'));
-            const newComments = comments.map(comment => {
-    
-                const newReplies = comment.replies.filter(item => {
-                    if(replyID != item.id) {
-                        return item;
-                    };
-                })
-    
-                comment.replies = newReplies;
-                return comment;
-            });
-    
-            localStorage.setItem('comments', JSON.stringify(newComments));
+            const id = replyComment.dataset.id;
+
+            modal.classList.remove('hidden');
+
+            /* I'm taking the advantage of localStorage here to select the specific comment to delete */
+            localStorage.setItem('deleteButton', JSON.stringify(id));
         });
+    });
+};
+/* actual delete functionality */
+const modalDeleteCommentReply = () => {
+    modalDeleteButton.addEventListener('click', () => {
+        const id = JSON.parse(localStorage.getItem('deleteButton'));
+
+        const replyComment = document.querySelector(`[data-id="${id}"]`);
+
+        const repliesContainer = replyComment.closest('.replies-container');
+        const repliesWrapper = replyComment.closest('.replies-wrapper');
+        
+        repliesWrapper.children.length <= 1 && repliesContainer.classList.add('hidden');
+        replyComment.remove();
+
+        const comments = JSON.parse(localStorage.getItem('comments'));
+        const newComments = comments.map(comment => {
+
+            const newReplies = comment.replies.filter(item => {
+                if(id != item.id) {
+                    return item;
+                };
+            })
+
+            comment.replies = newReplies;
+            return comment;
+        });
+
+        localStorage.setItem('comments', JSON.stringify(newComments));
+
+        modal.classList.add('hidden');
     });
 };
 const editReply = buttons => {
@@ -107,10 +130,10 @@ const editReply = buttons => {
                     if(reply.id == replyID) {
                         replyContent = reply.content;
                         replyReplyingTo = reply.replyingTo;
-                    }
-                })
-            }
-        })
+                    };
+                });
+            };
+        });
 
         contentContainer.innerHTML = `
             <div class="">
@@ -138,7 +161,7 @@ const editReply = buttons => {
                     });
                     comment.replies = newReplies;
                 }
-                return comment
+                return comment;
             });
 
             localStorage.setItem('comments', JSON.stringify(updateData));
@@ -166,9 +189,9 @@ const commentPlusButtons = buttons => {
             const newData = data.map(comment => {
                 if(commentID == comment.id) {
                     comment.score = scoreValue;
-                }
+                };
                 return comment
-            })
+            });
             localStorage.setItem('comments', JSON.stringify(newData));
         });
     });
@@ -184,10 +207,8 @@ const commentMinusButtons = buttons => {
             const comment = btn.closest('.main-comment');
             const score = comment.querySelector('.score-count');
             let scoreValue = parseInt(score.textContent);
-            if(scoreValue >= 1) {
-                scoreValue--;
-            }
 
+            scoreValue >= 1 && scoreValue--;
             score.textContent = scoreValue;
     
             /* LOCAL STORAGE */
@@ -195,9 +216,9 @@ const commentMinusButtons = buttons => {
             const newData = data.map(comment => {
                 if(commentID == comment.id) {
                     comment.score = scoreValue;
-                }
-                return comment
-            })
+                };
+                return comment;
+            });
             localStorage.setItem('comments', JSON.stringify(newData));
         });
     });
@@ -224,13 +245,13 @@ const replyCommentPlusButtons = buttons => {
                     const newReplies = comment.replies.map(reply => {
                         if(reply.id == replyCommentID) {
                             reply.score = scoreValue;
-                        }
+                        };
                         return reply;
                     });
                     comment.replies = newReplies;
-                }
+                };
                 return comment;
-            })
+            });
             localStorage.setItem('comments', JSON.stringify(newData));
         });
     });
@@ -248,10 +269,7 @@ const replyCommentMinusButtons = buttons => {
             const score = replyComment.querySelector('.score-count');
             let scoreValue = parseInt(score.textContent);
 
-            if(scoreValue >= 1) {
-                scoreValue--;
-            }
-
+            scoreValue >= 1 && scoreValue--;
             score.textContent = scoreValue;
     
             /* LOCAL STORAGE */
@@ -261,13 +279,13 @@ const replyCommentMinusButtons = buttons => {
                     const newReplies = comment.replies.map(reply => {
                         if(reply.id == replyCommentID) {
                             reply.score = scoreValue;
-                        }
+                        };
                         return reply;
                     });
                     comment.replies = newReplies;
-                }
+                };
                 return comment;
-            })
+            });
             localStorage.setItem('comments', JSON.stringify(newData));
         });
     });
@@ -288,20 +306,13 @@ const mentioned = (content, username) => {
             return `<span class="text-blue-200 font-medium">@${username} </span>${content}`;
         };
     } ;
-    
-    /* 
-    <span class="text-blue-200 font-medium">@${replyingTo} </span>${content}
-     */
 };
 /* TIME CONVERSION */
 const timeConversion = (time) => {
-
     if(/\D+/g.test(time)) {
         return time;
     } else {
-        const currentTime = new Date();
-        const t = currentTime - time;
-        // return t;
+        const t = new Date() - time;
         
         if(t <= 1000) {
             return '1 second ago';
@@ -601,12 +612,10 @@ const timeConversion = (time) => {
             return '6 days ago'
         } else if (t < 1000 * 60 * 60 * 24 * 7 * 2) {
             return '1 week ago'
-        }
-
+        };
 
     };
-
-}
+};
 /* COMMENTS TEMPLATES */
 const commentsTemplate = (content, createdAt, id, score, image, username) => {
     return `
@@ -770,7 +779,7 @@ commentsData.forEach(commentData => {
 
     const repliesContainer = comment.querySelector('.replies-container');
     const repliesWrapper = comment.querySelector('.replies-wrapper');
-    
+
     /* APPEND REPLIES */
     if(commentData.replies.length > 0) {
         commentData.replies.forEach(replyData => {
@@ -823,7 +832,6 @@ const showForm = (btn) => {
 const commentReplyButtons = document.querySelectorAll('.comment-reply-btn');
 const repliesReplyButtons = document.querySelectorAll('.replies-reply-btn');
 const forms = document.querySelectorAll('.form-container');
-
 
 /* INITIAL VARIABLES FOR STORING REPLIES */
 let commentID;
@@ -897,8 +905,9 @@ forms.forEach(form => {
             replyCommentMinusButtons(replyCommentScoreMinusButtons);
 
             /* REPLIES FUNCTIONALITIES */
-            const deleteButtons = document.querySelectorAll('.delete-button');
-            deleteReply(deleteButtons);
+            /* delete buttons to show modal*/
+            const deleteButton = replyComment.querySelectorAll('.delete-button');
+            deleteCommentReply(deleteButton);
             const editButtons = document.querySelectorAll('.edit-button');
             editReply(editButtons);
 
@@ -910,7 +919,6 @@ forms.forEach(form => {
             const svgsRed = document.querySelectorAll('.animations-svg-red');
             svgsRedButtons(svgsRed);
         };
-
     });
 });
 
@@ -925,8 +933,21 @@ const replyCommentScoreMinusButtons = document.querySelectorAll('.reply-comment-
 replyCommentMinusButtons(replyCommentScoreMinusButtons);
 
 /* REPLIES FUNCTIONALITIES */
-const deleteButtons = document.querySelectorAll('.delete-button');
-deleteReply(deleteButtons);
+
+const modal = document.querySelector('.modal');
+const modalDeleteButton = modal.querySelector('.modal-delete-btn');
+const modalCancelButton = modal.querySelector('.modal-cancel-btn');
+
+modalCancelButton.addEventListener('click', () => {
+    modal.classList.add('hidden');
+});
+
+/* delete buttons to show modal*/
+const deleteButton = document.querySelectorAll('.delete-button');
+deleteCommentReply(deleteButton);
+/* actual delete functionality */
+modalDeleteCommentReply();
+
 const editButtons = document.querySelectorAll('.edit-button');
 editReply(editButtons);
 
